@@ -8,6 +8,10 @@ const userExist = (username) => {
   return users.some((user) => user.username === username);
 };
 
+const getBooks = () => {
+  return books;
+}
+
 
 public_users.post("/register", (req,res) => {
   //Write your code here
@@ -26,25 +30,34 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
+public_users.get('/',async (req, res) => {
   //Write your code here
-  return res.status(200).send(JSON.stringify(books,null,4));
+  try{
+    const books = await getBooks();
+    return res.status(200).send(JSON.stringify(books,null,4));
+  } catch (e){
+    return res.status(500).json({ e: 'Internal Server Error' });
+  }
   //return res.status(300).json({message: "Yet to be implemented"});
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+public_users.get('/isbn/:isbn',async (req, res) => {
   //Write your code here
   const isbn = parseInt(req.params.isbn);
-  const book = books[isbn];
-  return res.status(200).json({ isbn: book });
+  const book = await books[isbn];
+  if(!book){
+    return res.status(400).json({ message: "Cannot find ISBN" });
+  } else{
+    return res.status(200).json({ isbn: book });
+  }
   //return res.status(300).json({message: "Yet to be implemented"});
  });
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
+public_users.get('/author/:author',async (req, res) => {
   //Write your code here
-  const matchBooks = Object.values(books).filter(
+  const matchBooks = Object.values(await books).filter(
     (book) => book.author.toLowerCase() === req.params.author.toLowerCase()
   );
   return res.status(200).send(JSON.stringify(matchBooks,null,4))
@@ -52,9 +65,9 @@ public_users.get('/author/:author',function (req, res) {
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
+public_users.get('/title/:title',async (req, res) => {
   //Write your code here
-  const matchtitle = Object.values(books).filter(
+  const matchtitle = Object.values( await books).filter(
     (book) => book.title.toLowerCase() === req.params.title.toLowerCase()
   );
   return res.status(200).send(JSON.stringify(matchtitle,null,4))
